@@ -1,0 +1,28 @@
+{
+    "name": "huo-zi/image-process",
+    "description": "image process format resize crop",
+    "homepage": "https://github.com/huo-zi/image-process",
+    "keywords": [
+        "image-process",
+        "ImageProcess",
+        "image",
+        "huozi"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "huozi",
+            "email": "lio990527@163.com",
+            "homepage": "https://github.com/huo-zi"
+        }
+    ],
+    "require": {
+        "php": ">=7.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Huozi\\ImageProcess\\": "src"
+        }
+    }
+}
