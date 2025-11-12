@@ -7,8 +7,6 @@ use Huozi\ImageProcess\Text;
 class QiniuOss extends TencentCos
 {
 
-    private $handlers = [];
-
     /**
      * @inheritDoc
      */

@@ -7,7 +7,7 @@ use Huozi\ImageProcess\Text;
 class TencentCos extends AbstractDriver
 {
 
-    private $handlers = [];
+    protected $handlers = [];
 
     /**
      * @inheritDoc
