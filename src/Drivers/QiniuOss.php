@@ -2,8 +2,6 @@
 
 namespace Huozi\ImageProcess\Drivers;
 
-use Huozi\ImageProcess\Text;
-
 class QiniuOss extends TencentCos
 {
 
@@ -32,43 +30,8 @@ class QiniuOss extends TencentCos
                 break;
         }
 
-        $this->handlers['imageMogr2']['thumbnail'] = $params;
+        $this->putHandle('imageMogr2', 'thumbnail', $params);
         return $this;
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function imageWatermark(string $path, int $x = 10, int $y = 10, string $g = 'SouthEast', int $t = 100, $fill = 0)
-    {
-        $this->handlers['watermark']['3'][] = [
-            'image' => static::safeBase64Encode($path),
-            'dx' => $x,
-            'dy' => $y,
-            'gravity' => $g,
-            'dissolve' => $t,
-            'tile' => $fill,
-        ];
-        return $this;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function textWatermark(Text $text, int $x = 10, int $y = 10, string $g = 'SouthEast', int $t = 100, $fill = 0)
-    {
-        $this->handlers['watermark']['3'][] = \array_filter([
-            'text' => static::safeBase64Encode($text->text),
-            'font' => static::safeBase64Encode($text->font),
-            'fontsize' => $text->size,
-            'fill' => static::safeBase64Encode($text->color),
-        ]) + [
-            'dx' => $x,
-            'dy' => $y,
-            'gravity' => $g,
-            'dissolve' => $t,
-            'tile' => $fill,
-        ];
-        return $this;
-    }
 }

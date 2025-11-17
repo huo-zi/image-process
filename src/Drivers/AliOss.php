@@ -56,6 +56,37 @@ class AliOss extends AbstractDriver
         return $this;
     }
 
+    /**
+     * @inheritDoc
+     */
+    public function blur($r, $s)
+    {
+        $this->handlers['blur'] = \compact('r', 's');
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     * @param int $value 1 - 100 oss/obs时会自动*4取范围 50-399
+     */
+    public function sharpen(int $value)
+    {
+        $value = $value * 4;
+        $value = $value < 50 ? 50 : $value;
+        $value = $value > 399 ? 399 : $value;
+        $this->handlers['sharpen'] = $value;
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function rotate(int $value)
+    {
+        $this->handlers['rotate'] = $value;
+        return $this;
+    }
+
     public function circle($r)
     {
         $this->handlers['circle'] = \compact('r');
@@ -65,12 +96,6 @@ class AliOss extends AbstractDriver
     public function radius($r)
     {
         $this->handlers['rounded-corners'] = \compact('r');
-        return $this;
-    }
-
-    public function blur($r, $s)
-    {
-        $this->handlers['blur'] = \compact('r', 's');
         return $this;
     }
 
@@ -132,27 +157,9 @@ class AliOss extends AbstractDriver
     /**
      * @inheritDoc
      */
-    public function rotate(int $value)
-    {
-        $this->handlers['rotate'] = $value;
-        return $this;
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function contrast(int $value)
     {
         $this->handlers['contrast'] = $value;
-        return $this;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function sharpen(int $value)
-    {
-        $this->handlers['sharpen'] = $value;
         return $this;
     }
 

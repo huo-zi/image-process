@@ -34,7 +34,7 @@ class TencentCos extends AbstractDriver
                 break;
         }
 
-        $this->handlers['imageMogr2']['thumbnail'] = $params;
+        $this->putHandle('imageMogr2', 'thumbnail', $params);
         return $this;
     }
 
@@ -44,7 +44,7 @@ class TencentCos extends AbstractDriver
     public function crop($w = 0, $h = 0, $x = 0, $y = 0, $g = null)
     {
         if (!\is_null($g)) {
-            $this->handlers['imageMogr2']['gravity'] = $g;
+            $this->putHandle('imageMogr2', 'gravity', $g);
         }
 
         $params = \array_filter([$w, 'x', $h]);
@@ -52,7 +52,58 @@ class TencentCos extends AbstractDriver
             $params = ['!', $w, 'x', $h, $x > 0 ? 'a' : '', $x, $y > 0 ? 'a' : '', $y];
         }
 
-        $this->handlers['imageMogr2']['crop'] = $params;
+        $this->putHandle('imageMogr2', 'crop', $params);
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function blur($r, $s)
+    {
+        $this->putHandle('imageMogr2', 'blur', [$r, 'x', $s]);
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     * @param int $value 1 - 100 cos/qiniu时会自动*3取范围 10-300
+     */
+    public function sharpen(int $value)
+    {
+        $value = $value * 3;
+        $value = $value < 10 ? 10 : $value;
+        $value = $value > 300 ? 300 : $value;
+        $this->putHandle('imageMogr2', 'sharpen', $value);
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function rotate(int $value)
+    {
+        $this->putHandle('imageMogr2', 'rotate', $value);
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function flip(int $mode)
+    {
+        switch ($mode) {
+            case 0:
+                $this->putHandle('imageMogr2', 'flip', 'vertical');
+                break;
+            case 1:
+                $this->putHandle('imageMogr2', 'flip', 'horizontal');
+                break;
+            case 2:
+                $this->putHandle('imageMogr2', 'flip', 'vertical');
+                $this->putHandle('imageMogr2', 'flip', 'horizontal');
+                break;
+        }
         return $this;
     }
 
@@ -61,7 +112,7 @@ class TencentCos extends AbstractDriver
      */
     public function format(string $type)
     {
-        $this->handlers['imageMogr2']['format'] = $type;
+        $this->putHandle('imageMogr2', 'format', $type);
         return $this;
     }
 
@@ -70,37 +121,19 @@ class TencentCos extends AbstractDriver
      */
     public function quality(int $value)
     {
-        $this->handlers['imageMogr2']['quality'] = $value;
+        $this->putHandle('imageMogr2', 'quality', $value);
         return $this;
     }
 
     public function interlace(int $value)
     {
-        $this->handlers['imageMogr2']['interlace'] = $value;
-        return $this;
-    }
-    
-    public function rotate(int $value)
-    {
-        $this->handlers['imageMogr2']['imageMogr2.rotate'] = $value;
-        return $this;
-    }
-
-    public function blur($r, $s)
-    {
-        $this->handlers['imageMogr2']['imageMogr2.blur'] = [$r, 'x', $s];
-        return $this;
-    }
-
-    public function sharpen(int $value)
-    {
-        $this->handlers['imageMogr2']['imageMogr2.sharpen'] = $value;
+        $this->putHandle('imageMogr2', 'interlace', $value);
         return $this;
     }
 
     public function radius($r)
     {
-        $this->handlers['imageMogr2']['roundPic.radius'] = $r;
+        $this->putHandle('imageMogr2', 'roundPic.radius', $r);
         return $this;
     }
 
@@ -109,14 +142,14 @@ class TencentCos extends AbstractDriver
      */
     public function imageWatermark(string $path, int $x = 10, int $y = 10, string $g = 'SouthEast', int $t = 100, $fill = 0)
     {
-        $this->handlers['watermark']['3'][] = [
+        $this->putHandle('watermark', '1', [
             'image' => static::safeBase64Encode($path),
             'dx' => $x,
             'dy' => $y,
             'gravity' => $g,
             'dissolve' => $t,
             'tile' => $fill,
-        ];
+        ]);
         return $this;
     }
 
@@ -125,7 +158,7 @@ class TencentCos extends AbstractDriver
      */
     public function textWatermark(Text $text, int $x = 10, int $y = 10, string $g = 'SouthEast', int $t = 100, $fill = 0)
     {
-        $this->handlers['watermark']['3'][] = \array_filter([
+        $this->putHandle('watermark', '2', \array_filter([
             'text' => static::safeBase64Encode($text->text),
             'font' => static::safeBase64Encode($text->font),
             'fontsize' => $text->size,
@@ -136,8 +169,23 @@ class TencentCos extends AbstractDriver
             'gravity' => $g,
             'dissolve' => $t,
             'tile' => $fill,
-        ];
+        ]);
         return $this;
+    }
+
+    protected function putHandle($type, $method, $value)
+    {
+        $data = $this->handlers[$type] ?? [];
+        $i = 0;
+        do {
+            if (\array_key_exists($method, $data[$i] ?? [])) {
+                $i++;
+                continue;
+            }
+            $data[$i][$method] = $value;
+            break;
+        } while (true);
+        $this->handlers[$type] = $data;
     }
 
     protected function handle() : string
@@ -147,20 +195,23 @@ class TencentCos extends AbstractDriver
         return $image . '?' . \implode(
             '|',
             \array_map(function ($value, $key) {
-                return \sprintf(
-                    '%s/%s',
-                    $key,
-                    \implode('/', \array_map(function($val, $key) {
-                        if (\is_array($val)) {
-                            $val = \is_array($val[0]) ? \array_reduce($val, function($init, $item) {
-                                return $init . ($init ? '/' : '') . \implode('/', \array_map(function($v, $k) {
-                                    return $k . '/' . $v;
-                                }, \array_values($item), \array_keys($item)));
-                            }) : \implode('', $val); 
-                        }
-                        return $key . '/' . $val; 
-                    }, \array_values($value), \array_keys($value)))
-                );
+                if (static::isAssoc($value)) {
+                    $value = [$value];
+                }
+                return array_reduce($value, function ($carry, $item) use ($key) {
+                    return $carry . ($carry ? '|' : '') . \sprintf(
+                        '%s/%s',
+                        $key,
+                        \implode('/', \array_map(function ($val, $key) {
+                            if (\is_array($val)) {
+                                $val = static::isAssoc($val) ? \array_reduce(\array_keys($val), function ($init, $k) use ($val) {
+                                    return $init . ($init ? '/' : '') . $k . '/' . $val[$k];
+                                }) : \implode('', $val);
+                            }
+                            return $key . '/' . $val;
+                        }, \array_values($item), \array_keys($item)))
+                    );
+                });
             }, \array_values($this->handlers), \array_keys($this->handlers))
         );
     }

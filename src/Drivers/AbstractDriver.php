@@ -41,10 +41,43 @@ abstract class AbstractDriver
      * @param integer $h 高
      * @param integer $x
      * @param integer $y
-     * @param string $g 原点位置 默认:NorthWest NorthWest|North|NorthEast|West|Center|East|SorthWest|Sorth|SorthEast 
+     * @param string $g 原点位置 默认:NorthWest NorthWest|North|NorthEast|West|Center|East|SouthWest|South|SouthEast 
      * @return static
      */
     abstract public function crop($w = 0, $h = 0, $x = 0, $y = 0, $g = 'NorthWest');
+
+    /**
+     * 模糊
+     *
+     * @param integer $r 模糊半径 1-50
+     * @param integer $s 正太分布标准差 1-50
+     * @return static
+     */
+    abstract public function blur(int $r, int $s);
+
+    /**
+     * 锐化
+     *
+     * @param integer $value 1-100
+     * @return static
+     */
+    abstract public function sharpen(int $value);
+
+    /**
+     * 旋转
+     *
+     * @param integer $value 0-360 顺时针旋转度数
+     * @return static
+     */
+    abstract public function rotate(int $value);
+
+    /**
+     * 翻转
+     * 
+     * @param int $mode 0 垂直 1 水平 2双向
+     * @return static
+     */
+    abstract public function flip(int $mode);
 
     /**
      * 格式化类型
@@ -125,5 +158,20 @@ abstract class AbstractDriver
     public static function ucsplit($string)
     {
         return preg_split('/(?=\p{Lu})/u', $string, -1, PREG_SPLIT_NO_EMPTY);
+    }
+
+    /**
+     * Determines if an array is associative.
+     *
+     * An array is "associative" if it doesn't have sequential numerical keys beginning with zero.
+     *
+     * @param  array  $array
+     * @return bool
+     */
+    public static function isAssoc(array $array)
+    {
+        $keys = array_keys($array);
+
+        return array_keys($keys) !== $keys;
     }
 }
